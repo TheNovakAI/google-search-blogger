@@ -64,6 +64,7 @@ def extract_verbatim_with_gpt(content_data, search_topic):
     system_prompt = """
     You are an AI assistant tasked with identifying and preserving all relevant details related to a given search topic from web content. 
     Extract the most meaningful information verbatim, ensuring that any quotes, statistics, or key phrases can be accurately cited later.
+    Make sure to include the full URL of the source for context.
     """
 
     user_prompt = f"""
@@ -72,7 +73,7 @@ def extract_verbatim_with_gpt(content_data, search_topic):
     Extracted Content: {content_data['content']}
     
     Please extract the relevant details verbatim from the provided content that relates directly to the search topic. 
-    Ensure that any key phrases, quotes, or statistics are preserved exactly as they appear so they can be used for direct quotations and citations in future blog generation.
+    Ensure that any key phrases, quotes, or statistics are preserved exactly as they appear so they can be used for direct quotations and citations in future blog generation. Include the full URL of the source for context.
     """
 
     try:
@@ -82,7 +83,7 @@ def extract_verbatim_with_gpt(content_data, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=15000  # Set within model's limit for verbatim extraction
+            max_tokens=10000  # Set within model's limit for verbatim extraction
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -96,6 +97,16 @@ def create_blog_post(summaries, search_topic):
     Ensure the post has a unique tone, a logical flow, uses top keywords from the sources optimally, includes an introduction, key points from all sources, and a conclusion. 
     Cite all sources and references used, and make sure any quotes or verbatim text is clearly indicated and attributed.
     Use the provided search topic as the title and basis for the description of the blog post.
+    When adding external links, use the following MDX format:
+    
+    ---
+    title: "AI Development: A Comprehensive Guide for Developers"
+    description: "Learn how to develop AI applications effectively by mastering the latest tools, techniques, and best practices."
+    ---
+
+    import ExternalLink from '../../../components/ExternalLink.astro';
+
+    Also, save the blog post as an .mdx file for the user to download.
     """
 
     user_prompt = f"""
@@ -104,6 +115,14 @@ def create_blog_post(summaries, search_topic):
     
     Please combine these summaries into a single well-written blog post that is unique, informative, and optimally uses keywords. 
     Use the search topic as the title and description, and ensure to cite all referenced content. Preserve any verbatim text exactly and attribute it properly.
+    Include external links in the MDX format as specified, and save the output as an .mdx file for download. It's for an astro blog, so add the import for external links to the top
+    and follow the format for the title and description too. Optimize formatting and if it has checkboxes or other fancy formatting do it. Keep it nice and long and detailed and amazing post.
+    ---
+title: "AI Development: A Comprehensive Guide for Developers"
+description: "Learn how to develop AI applications effectively by mastering the latest tools, techniques, and best practices."
+---
+
+import ExternalLink from '../../../components/ExternalLink.astro';
     """
 
     try:
@@ -113,12 +132,19 @@ def create_blog_post(summaries, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=4000  # Increased token limit for blog post generation
+            max_tokens=4000
         )
         return response.choices[0].message.content
     except Exception as e:
         st.error(f"An error occurred while creating the blog post with GPT-4o: {e}")
         return None
+
+def save_mdx_file(content, filename="generated_blog.mdx"):
+    """Saves the content to an .mdx file and provides a download link."""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
+    st.success(f"Blog post saved as {filename}.")
+    st.download_button("Download .mdx file", data=content, file_name=filename, mime="text/mdx")
 
 # Streamlit UI
 st.title("AI-Powered Blog Post Generator")
@@ -158,6 +184,7 @@ if st.button("Generate Blog Post"):
                 st.error(blog_post)
             else:
                 st.markdown(blog_post)
+                save_mdx_file(blog_post)
         else:
             st.error("No valid content could be extracted from the provided URLs.")
     else:
