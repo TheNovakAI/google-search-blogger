@@ -44,7 +44,9 @@ def scrape_relevant_content(url):
         combined_content = " ".join([title] + headings + paragraphs[:100])  # Limit to first 100 paragraphs
 
         if combined_content.strip():  # Ensure that there is some content to return
-            st.write(f"Scraped content from {url}:\n", combined_content[:500] + "...")  # Show a preview
+            st.write(f"Scraped content from {url} (Preview):\n", combined_content[:500] + "...")  # Show a preview
+            if st.checkbox(f"Show full scraped content for {url}", False):
+                st.text_area(f"Full scraped content from {url}", combined_content, height=300)
             return {
                 'content': combined_content,
                 'meta_tags': meta_tags,
@@ -81,7 +83,7 @@ def parse_html_with_gpt(content_data, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=100000  # Increase token limit for comprehensive parsing
+            max_tokens=10000  # Set within model's limit for parsing
         )
         return response.choices[0].message.content
     except Exception as e:
