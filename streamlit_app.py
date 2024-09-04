@@ -116,7 +116,8 @@ def create_blog_post(summaries, search_topic):
     Please combine these summaries into a single well-written blog post that is unique, informative, and optimally uses keywords. 
     Use the search topic as the title and description, and ensure to cite all referenced content. Preserve any verbatim text exactly and attribute it properly.
     Include external links in the MDX format as specified, and save the output as an .mdx file for download. It's for an astro blog, so add the import for external links to the top
-    and follow the format for the title and description too. Optimize formatting and if it has checkboxes or other fancy formatting do it. Keep it nice and long and detailed and amazing post.
+    and follow the format for the title and description too. Optimize formatting and if it has checkboxes or other fancy formatting do it. Keep it nice and long and detailed and amazing post. 
+    Don't source too many links write it as our own tone of confident about aI. Very lengthly Blog post.
     ---
 title: "AI Development: A Comprehensive Guide for Developers"
 description: "Learn how to develop AI applications effectively by mastering the latest tools, techniques, and best practices."
