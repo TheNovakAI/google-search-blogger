@@ -53,7 +53,7 @@ def scrape_relevant_content(url):
         st.error(f"An error occurred while scraping: {e}")
         return None
 
-def parse_html_with_gpt(content_data):
+def parse_html_with_gpt(content_data, search_topic):
     """Parses the extracted content using GPT-4o-mini to keep only the most relevant parts."""
     system_prompt = """
     You are an AI assistant tasked with refining web content. Your job is to extract meaningful content, including the main text, important keywords, and useful metadata, while excluding ads, menus, and other irrelevant sections.
@@ -65,6 +65,7 @@ def parse_html_with_gpt(content_data):
     Content: {content_data['content']}
     Meta Tags: {content_data['meta_tags']}
     URL: {content_data['url']}
+    Search Topic: {search_topic}
     
     Extract only the most relevant and meaningful text content, keeping the main points, essential information, and any citations or references. Exclude irrelevant details like ads, menus, or repeated sections.
     """
@@ -82,16 +83,20 @@ def parse_html_with_gpt(content_data):
     except Exception as e:
         return f"An error occurred while parsing content with GPT-4o-mini: {e}"
 
-def create_blog_post(summaries):
+def create_blog_post(summaries, search_topic):
     """Combines multiple refined summaries into a unique, engaging, and well-cited blog post using GPT-4o."""
     system_prompt = """
     You are a professional blog writer. Combine the provided refined summaries into a single cohesive, engaging, and informative blog post.
     Ensure the post has a unique tone, a logical flow, uses top keywords from the sources optimally, includes an introduction, key points from all sources, and a conclusion. Cite all sources and references used.
+    Use the provided search topic as the title and basis for the description of the blog post.
     """
 
     user_prompt = f"""
-    Here are the refined summaries from multiple sources: {summaries}
-    Please combine these summaries into a single well-written blog post that is unique, informative, and optimally uses keywords. Include citations for all referenced content.
+    Search Topic: {search_topic}
+    Refined Summaries: {summaries}
+    
+    Please combine these summaries into a single well-written blog post that is unique, informative, and optimally uses keywords. 
+    Use the search topic as the title and description, and ensure to cite all referenced content.
     """
 
     try:
@@ -120,18 +125,26 @@ if st.button("Generate Blog Post"):
         # Extract URLs from search results
         urls = [result['link'] for result in search_results.get('organic_results', []) if 'link' in result]
 
+        # Progress indicator
+        progress_bar = st.progress(0)
+        total_urls = len(urls[:20])
+        st.write(f"Processing {total_urls} links...")
+
         # Step 2: Scrape and parse relevant content from URLs
         parsed_summaries = []
-        for url in urls[:20]:  # Limit to the top 20 URLs
+        for index, url in enumerate(urls[:20]):  # Limit to the top 20 URLs
+            st.write(f"Scraping and processing URL {index + 1} of {total_urls}: {url}")
             content_data = scrape_relevant_content(url)
             if content_data:
-                parsed_summary = parse_html_with_gpt(content_data)
+                parsed_summary = parse_html_with_gpt(content_data, search_topic)
                 if "An error occurred" not in parsed_summary:
                     parsed_summaries.append(parsed_summary)
+            # Update progress
+            progress_bar.progress((index + 1) / total_urls)
 
         if parsed_summaries:
             # Step 3: Combine parsed summaries into a unique and cohesive blog post
-            blog_post = create_blog_post(parsed_summaries)
+            blog_post = create_blog_post(parsed_summaries, search_topic)
             if isinstance(blog_post, str) and "An error occurred" in blog_post:
                 st.error(blog_post)
             else:
