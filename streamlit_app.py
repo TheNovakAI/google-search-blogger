@@ -82,7 +82,7 @@ def extract_verbatim_with_gpt(content_data, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=10000  # Set within model's limit for verbatim extraction
+            max_tokens=15000  # Set within model's limit for verbatim extraction
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -113,7 +113,7 @@ def create_blog_post(summaries, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=10000  # Increased token limit for blog post generation
+            max_tokens=4000  # Increased token limit for blog post generation
         )
         return response.choices[0].message.content
     except Exception as e:
