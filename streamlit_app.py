@@ -43,14 +43,18 @@ def scrape_relevant_content(url):
         # Combine relevant text parts while limiting content size
         combined_content = " ".join([title] + headings + paragraphs[:100])  # Limit to first 100 paragraphs
 
-        # Return combined content and meta information
-        return {
-            'content': combined_content,
-            'meta_tags': meta_tags,
-            'url': url
-        }
+        if combined_content.strip():  # Ensure that there is some content to return
+            st.write(f"Scraped content from {url}:\n", combined_content[:500] + "...")  # Show a preview
+            return {
+                'content': combined_content,
+                'meta_tags': meta_tags,
+                'url': url
+            }
+        else:
+            st.warning(f"No relevant content found on {url}.")
+            return None
     except Exception as e:
-        st.error(f"An error occurred while scraping: {e}")
+        st.error(f"An error occurred while scraping {url}: {e}")
         return None
 
 def parse_html_with_gpt(content_data, search_topic):
@@ -81,7 +85,8 @@ def parse_html_with_gpt(content_data, search_topic):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"An error occurred while parsing content with GPT-4o-mini: {e}"
+        st.error(f"An error occurred while parsing content with GPT-4o-mini: {e}")
+        return None
 
 def create_blog_post(summaries, search_topic):
     """Combines multiple refined summaries into a unique, engaging, and well-cited blog post using GPT-4o."""
@@ -110,7 +115,8 @@ def create_blog_post(summaries, search_topic):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"An error occurred while creating the blog post with GPT-4o: {e}"
+        st.error(f"An error occurred while creating the blog post with GPT-4o: {e}")
+        return None
 
 # Streamlit UI
 st.title("AI-Powered Blog Post Generator")
@@ -137,13 +143,14 @@ if st.button("Generate Blog Post"):
             content_data = scrape_relevant_content(url)
             if content_data:
                 parsed_summary = parse_html_with_gpt(content_data, search_topic)
-                if "An error occurred" not in parsed_summary:
+                if parsed_summary:
                     parsed_summaries.append(parsed_summary)
             # Update progress
             progress_bar.progress((index + 1) / total_urls)
 
         if parsed_summaries:
             # Step 3: Combine parsed summaries into a unique and cohesive blog post
+            st.write("Combining content into a blog post...")
             blog_post = create_blog_post(parsed_summaries, search_topic)
             if isinstance(blog_post, str) and "An error occurred" in blog_post:
                 st.error(blog_post)
