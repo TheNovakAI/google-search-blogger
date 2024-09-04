@@ -59,21 +59,20 @@ def scrape_relevant_content(url):
         st.error(f"An error occurred while scraping {url}: {e}")
         return None
 
-def parse_html_with_gpt(content_data, search_topic):
-    """Parses the extracted content using GPT-4o-mini to keep only the most relevant parts."""
+def extract_verbatim_with_gpt(content_data, search_topic):
+    """Extracts verbatim details relevant to the search topic using GPT-4o-mini."""
     system_prompt = """
-    You are an AI assistant tasked with refining web content. Your job is to extract meaningful content, including the main text, important keywords, and useful metadata, while excluding ads, menus, and other irrelevant sections.
-    Be sure to capture key sources or citations from the content.
+    You are an AI assistant tasked with identifying and preserving all relevant details related to a given search topic from web content. 
+    Extract the most meaningful information verbatim, ensuring that any quotes, statistics, or key phrases can be accurately cited later.
     """
 
     user_prompt = f"""
-    Here is the extracted web content: 
-    Content: {content_data['content']}
-    Meta Tags: {content_data['meta_tags']}
-    URL: {content_data['url']}
     Search Topic: {search_topic}
+    URL: {content_data['url']}
+    Extracted Content: {content_data['content']}
     
-    Extract only the most relevant and meaningful text content, keeping the main points, essential information, and any citations or references. Exclude irrelevant details like ads, menus, or repeated sections.
+    Please extract the relevant details verbatim from the provided content that relates directly to the search topic. 
+    Ensure that any key phrases, quotes, or statistics are preserved exactly as they appear so they can be used for direct quotations and citations in future blog generation.
     """
 
     try:
@@ -83,27 +82,28 @@ def parse_html_with_gpt(content_data, search_topic):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=10000  # Set within model's limit for parsing
+            max_tokens=10000  # Set within model's limit for verbatim extraction
         )
         return response.choices[0].message.content
     except Exception as e:
-        st.error(f"An error occurred while parsing content with GPT-4o-mini: {e}")
+        st.error(f"An error occurred while extracting verbatim content with GPT-4o-mini: {e}")
         return None
 
 def create_blog_post(summaries, search_topic):
     """Combines multiple refined summaries into a unique, engaging, and well-cited blog post using GPT-4o."""
     system_prompt = """
     You are a professional blog writer. Combine the provided refined summaries into a single cohesive, engaging, and informative blog post.
-    Ensure the post has a unique tone, a logical flow, uses top keywords from the sources optimally, includes an introduction, key points from all sources, and a conclusion. Cite all sources and references used.
+    Ensure the post has a unique tone, a logical flow, uses top keywords from the sources optimally, includes an introduction, key points from all sources, and a conclusion. 
+    Cite all sources and references used, and make sure any quotes or verbatim text is clearly indicated and attributed.
     Use the provided search topic as the title and basis for the description of the blog post.
     """
 
     user_prompt = f"""
     Search Topic: {search_topic}
-    Refined Summaries: {summaries}
+    Refined Summaries (verbatim where relevant): {summaries}
     
     Please combine these summaries into a single well-written blog post that is unique, informative, and optimally uses keywords. 
-    Use the search topic as the title and description, and ensure to cite all referenced content.
+    Use the search topic as the title and description, and ensure to cite all referenced content. Preserve any verbatim text exactly and attribute it properly.
     """
 
     try:
@@ -144,9 +144,9 @@ if st.button("Generate Blog Post"):
             st.write(f"Scraping and processing URL {index + 1} of {total_urls}: {url}")
             content_data = scrape_relevant_content(url)
             if content_data:
-                parsed_summary = parse_html_with_gpt(content_data, search_topic)
-                if parsed_summary:
-                    parsed_summaries.append(parsed_summary)
+                extracted_summary = extract_verbatim_with_gpt(content_data, search_topic)
+                if extracted_summary:
+                    parsed_summaries.append(extracted_summary)
             # Update progress
             progress_bar.progress((index + 1) / total_urls)
 
