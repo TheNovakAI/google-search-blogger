@@ -118,12 +118,16 @@ def create_blog_post(summaries, search_topic):
     Include external links in the MDX format as specified, and save the output as an .mdx file for download. It's for an astro blog, so add the import for external links to the top
     and follow the format for the title and description too. Optimize formatting and if it has checkboxes or other fancy formatting do it. Keep it nice and long and detailed and amazing post. 
     Don't source too many links write it as our own tone of confident about aI. Very lengthly Blog post.
+    Always add this header at the top with the date:
     ---
-title: "AI Development: A Comprehensive Guide for Developers"
-description: "Learn how to develop AI applications effectively by mastering the latest tools, techniques, and best practices."
+title: "Top 10 Essential AI Tools for Businesses in 2024"
+author: "Ryan Novak"
+date: 2024-09-03
+description: "Discover the must-have AI tools that can enhance efficiency, automate tasks, and drive growth for businesses in 2024."
+tags: ["AI", "Business Tools", "AI Trends 2024", "Machine Learning", "Artificial Intelligence", "Productivity Tools", "AI Automation"]
 ---
 
-import ExternalLink from '../../../components/ExternalLink.astro';
+import ExternalLink from '../../../components/ExternalLink.astro'; AND THEN WRAP THE EXTERNAL LINKS IN THE TAG THIS IMPORTED.
     """
 
     try:
